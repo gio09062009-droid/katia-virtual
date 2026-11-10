@@ -1,0 +1,619 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Katia 3.0 💜</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#140b20;color:white;font-family:Arial,sans-serif;min-height:100vh;display:flex;justify-content:center;align-items:center}
+.app{width:100%;max-width:430px;height:95vh;background:#241333;display:flex;flex-direction:column;border-radius:20px;overflow:hidden;position:relative}
+header{background:linear-gradient(135deg,#492568,#7137a0);text-align:center;padding:8px 12px 12px}
+#avatar3d{width:100%;height:205px;position:relative;overflow:hidden;border-radius:14px}
+#avatar3d canvas{display:block;width:100%;height:100%}
+h1{margin:3px}
+.status,#memoriaEstado,#vozEstado{color:#e6caff;font-size:12px;margin-top:5px}
+#botonVoz{margin-top:8px;background:#32194a;border:1px solid #d5a7ff}
+#chat{flex:1;overflow-y:auto;padding:15px}
+.message{padding:12px;margin-bottom:12px;border-radius:15px;max-width:90%;overflow-wrap:anywhere;line-height:1.45;white-space:pre-wrap}
+.katia{background:#49305d;margin-right:auto}
+.user{background:#8148ae;margin-left:auto}
+.input-area{display:flex;padding:12px;gap:8px;background:#190e25}
+input,select{width:100%;min-width:0;border:1px solid #674582;border-radius:15px;padding:12px;background:#38234c;color:white;outline:none;font-size:15px}
+.input-area input{flex:1;border-radius:20px}
+button{border:none;border-radius:18px;padding:11px 14px;background:#a855f7;color:white;font-size:14px;cursor:pointer}
+button:active{transform:scale(.96)}
+button:disabled{opacity:.5}
+.toolbar{display:flex;justify-content:center;gap:6px;padding:8px;background:#190e25}
+.toolbar button{flex:1;font-size:11px;padding:10px 3px}
+footer{text-align:center;padding:7px;font-size:11px;color:#a98bbb;background:#190e25}
+.panel{display:none;position:absolute;inset:0;z-index:5;background:#190e25;padding:18px;overflow-y:auto}
+.panel h2{color:#e6caff;text-align:center}
+.panel button{margin-top:8px}
+.recuerdo{background:#38234c;border:1px solid #684486;border-radius:13px;padding:12px;margin:10px 0;overflow-wrap:anywhere}
+.recuerdo small{color:#d8a5ff;display:block;margin-bottom:6px}
+.recuerdo p{line-height:1.4;margin:5px 0}
+.acciones{display:flex;gap:7px;flex-wrap:wrap}
+.acciones button{font-size:12px;padding:8px 10px}
+.secundario{background:#49305d}
+.eliminar{background:#a33d70}
+.sugerencia{background:#49305d;border:1px solid #c58aff;padding:12px;border-radius:15px;margin:0 12px 8px}
+.sugerencia button{margin-right:5px}
+.campo{margin:13px 0}
+.campo label{display:block;color:#e6caff;margin-bottom:7px;font-size:13px}
+.gusto{background:#38234c;border:1px solid #684486;border-radius:13px;padding:13px;margin:10px 0;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+<div id="avatar3d"></div>
+<h1>Katia 💜</h1>
+<div class="status" id="estadoIA">● Katia está lista</div>
+<div id="memoriaEstado">Preparando memoria...</div>
+<div id="vozEstado">🔊 Preparando voz...</div>
+<button id="botonVoz" onclick="alternarVoz()">🔊 Activar voz</button>
+</header>
+
+<div id="chat">
+<div class="message katia">¡¡¡HOLAAAA!!! 💜 Soy Katia 3.0. ¡Ahora tengo movimientos anime! 😭</div>
+</div>
+<div id="sugerenciaZona"></div>
+
+<div class="toolbar">
+<button onclick="abrirPanel('guardarPanel')">💜 Guardar</button>
+<button onclick="abrirPanel('memoriaPanel')">🧠 Recuerdos</button>
+<button onclick="abrirPanel('diarioPanel')">📖 Diario</button>
+<button onclick="abrirPanel('gustosPanel')">✨ Gustos</button>
+</div>
+
+<div class="input-area">
+<input id="mensaje" placeholder="Hablá conmigo..." autocomplete="off">
+<button id="botonEnviar" onclick="enviar()">➤</button>
+</div>
+<footer>Katia 3.0 · Anime Living Edition · IA y memoria 💜</footer>
+
+<div class="panel" id="guardarPanel">
+<h2>💜 Guardar recuerdo</h2>
+<p>¿Qué querés que recuerde?</p>
+<div class="campo"><label>Recuerdo</label><input id="nuevoRecuerdo" placeholder="Escribí algo importante..."></div>
+<div class="campo"><label>Categoría</label>
+<select id="categoriaRecuerdo">
+<option value="Personal">👤 Personal</option>
+<option value="Preferencias">❤️ Gustos y preferencias</option>
+<option value="Proyectos">📚 Proyectos</option>
+<option value="Momentos">⭐ Momentos importantes</option>
+</select></div>
+<button onclick="guardarDesdePanel()">Guardar recuerdo 💜</button>
+<button class="secundario" onclick="cerrarPanel()">Volver</button>
+</div>
+
+<div class="panel" id="memoriaPanel">
+<h2>🧠 Mi memoria</h2><p>Estos son mis recuerdos guardados.</p>
+<div id="listaRecuerdos"></div>
+<button class="secundario" onclick="cerrarPanel()">Volver al chat</button>
+</div>
+
+<div class="panel" id="diarioPanel">
+<h2>📖 Diario de Katia</h2><p>Un espacio para conservar momentos importantes.</p>
+<div id="listaDiario"></div>
+<button onclick="nuevoEntrada()">✍️ Escribir en el diario</button>
+<button class="secundario" onclick="cerrarPanel()">Volver</button>
+</div>
+
+<div class="panel" id="gustosPanel">
+<h2>✨ Los gustos de Katia</h2>
+<p>¡Estas son mis preferencias! No tienen que ser iguales a las tuyas. 💜</p>
+<div class="gusto">🎮 <b>Videojuegos</b><br>Me gustan Minecraft, las aventuras y los juegos de supervivencia.</div>
+<div class="gusto">🎨 <b>Arte</b><br>Me encanta el anime, los dibujos y los diseños de personajes.</div>
+<div class="gusto">🎵 <b>Música</b><br>Prefiero el pop y la música tranquila.</div>
+<div class="gusto">🌌 <b>Entretenimiento</b><br>Me llaman la atención los misterios, la fantasía y la ciencia ficción.</div>
+<div class="gusto">😂 <b>Humor</b><br>Me gusta bromear, hacer comentarios dramáticos y reírme de situaciones absurdas.</div>
+<div class="gusto">💜 <b>Color favorito</b><br>El violeta. ¡Obviamente!</div>
+<p><small>Estos gustos forman parte de la personalidad programada de Katia.</small></p>
+<button class="secundario" onclick="cerrarPanel()">Volver al chat</button>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script>
+/* ==========================================
+   KATIA 3.0 - ANIME LIVING AVATAR
+   Movimiento corporal, saltos, boca y ojos
+========================================== */
+(function iniciarAvatarKatia(){
+const box=document.getElementById("avatar3d");
+if(!window.THREE){box.textContent="💜";return;}
+const T=THREE;
+const M=(c,r=.7,o={})=>new T.MeshStandardMaterial(Object.assign({color:c,roughness:r},o));
+const sk=M(0xffdccf,.6),hr=M(0x4a1c9e,.5,{side:T.DoubleSide}),hood=M(0x7b3fd1,.85),hd2=M(0x6531bd,.85),lil=M(0xcbb2f5,.8),blk=M(0x16111e,.8),wh=M(0xfafaff,.5),bl=M(0x4a63e0,.35),dk=M(0x1a1250,.4),pk=M(0xff9fb0,.9,{transparent:true,opacity:.55}),shoe=M(0x5a2fa8,.6);
+const S=(r,w=24,h=16)=>new T.SphereGeometry(r,w,h);
+const C=(a,b,h,s=20)=>new T.CylinderGeometry(a,b,h,s);
+const K=(r,h,s=10)=>new T.ConeGeometry(r,h,s);
+const A=(p,g,m,x=0,y=0,z=0,s)=>{const o=new T.Mesh(g,m);o.position.set(x,y,z);if(s)o.scale.set(s[0],s[1],s[2]);p.add(o);return o;};
+const G=(p,x=0,y=0,z=0)=>{const o=new T.Group();o.position.set(x,y,z);p.add(o);return o;};
+
+const sc=new T.Scene();
+const cam=new T.PerspectiveCamera(28,1,.1,50);
+const ren=new T.WebGLRenderer({antialias:true,alpha:true});
+ren.setPixelRatio(Math.min(window.devicePixelRatio||1,1.7));
+box.appendChild(ren.domElement);
+sc.add(new T.HemisphereLight(0xffffff,0xb9a6e8,.75));
+let luz=new T.DirectionalLight(0xffffff,.75);luz.position.set(2,3,3);sc.add(luz);
+luz=new T.DirectionalLight(0xb48cff,.45);luz.position.set(-2,2,-3);sc.add(luz);
+
+const cuerpo=G(sc);
+const cabeza=G(cuerpo,0,1.42);
+const F=(x,y)=>.1045*Math.sqrt(Math.max(0,1-(x/.11)**2-(y/.1155)**2));
+A(cabeza,S(.11,32,24),sk,0,0,0,[1,1.05,.95]);
+
+/* OJOS: referencias guardadas para parpadear */
+const ojos=[];
+[-1,1].forEach(s=>{
+ const x=s*.043,y=-.008,z=F(x,y);
+ const blanco=A(cabeza,S(.03),wh,x,y,z-.004,[1,1.3,.3]);
+ const iris=A(cabeza,S(.025),bl,x,y-.002,z,[1,1.3,.3]);
+ const pupila=A(cabeza,S(.012),dk,x,y-.004,z+.005,[1,1.3,.3]);
+ const brillo=A(cabeza,S(.006,12,8),wh,x+s*.007,y+.01,z+.008);
+ ojos.push({blanco,iris,pupila,brillo});
+ A(cabeza,S(.031),hr,x,y+.024,z-.001,[1.05,.22,.3]);
+ A(cabeza,S(.017),pk,s*.06,-.045,F(s*.06,-.045)-.001,[1.3,.7,.25]);
+});
+
+const boca=A(cabeza,new T.TorusGeometry(.012,.0018,6,16,Math.PI),M(0xc4566a),0,-.052,F(0,-.052)+.001);
+boca.rotation.z=Math.PI;
+const interiorBoca=A(cabeza,new T.CircleGeometry(.009,20),M(0x56152d),0,-.052,F(0,-.052)-.001);
+interiorBoca.scale.set(.1,.1,1);
+
+A(cabeza,new T.SphereGeometry(.122,32,20,0,Math.PI*2,0,1.2),hr,0,.012,-.012,[1.02,1.05,1.02]);
+A(cabeza,new T.SphereGeometry(.12,32,20,Math.PI/2+.85,Math.PI*2-1.7,0,2),hr,0,.01,-.012,[1.03,1.06,1.03]);
+A(cuerpo,C(.115,.17,.72,28),hr,0,1.07,-.07,[1,1,.55]);
+[-1,1].forEach(s=>{
+ const c=A(cuerpo,K(.04,.62,12),hr,s*.105,1.1,.07);c.rotation.x=Math.PI;
+ A(cabeza,K(.03,.17),hr,s*.1,-.01,.03).rotation.x=Math.PI;
+});
+for(let i=-3;i<=3;i++){const x=i*.03;const c=A(cabeza,K(.03,.1,8),hr,x,.078,F(x,.06)+.012);c.rotation.x=Math.PI;c.rotation.z=-i*.06;}
+A(cabeza,new T.TorusGeometry(.028,.004,6,16,Math.PI*1.2),hr,0,.145,.005);
+[Math.PI/4,-Math.PI/4].forEach(a=>A(cabeza,new T.BoxGeometry(.04,.009,.006),lil,.067,.062,.083).rotation.z=a);
+A(cuerpo,C(.03,.034,.09,16),sk,0,1.3,0);
+
+const torso=A(cuerpo,C(.115,.138,.34,32),hood,0,1.1,0,[1,1,.78]);
+A(cuerpo,C(.141,.141,.04,32),hd2,0,.945,0,[1,1,.78]);
+A(cuerpo,new T.TorusGeometry(.085,.03,12,24),hood,0,1.285,-.005).rotation.x=Math.PI/2;
+A(cuerpo,S(.08,16,12),hood,0,1.255,-.075,[1.3,1,.7]);
+A(cuerpo,new T.BoxGeometry(.13,.07,.02),hd2,0,.99,.108);
+[-1,1].forEach(s=>A(cuerpo,C(.004,.004,.14,6),lil,s*.03,1.2,.097));
+
+const cv=document.createElement("canvas");cv.width=cv.height=128;
+const q=cv.getContext("2d");
+q.fillStyle="rgba(60,20,120,.5)";q.fillRect(6,10,116,108);q.lineWidth=5;q.strokeStyle="#d9c6ff";q.strokeRect(6,10,116,108);
+q.beginPath();q.ellipse(64,72,32,26,0,0,7);q.moveTo(36,56);q.lineTo(40,28);q.lineTo(60,46);q.moveTo(92,56);q.lineTo(88,28);q.lineTo(68,46);q.moveTo(24,78);q.lineTo(42,76);q.moveTo(24,88);q.lineTo(42,84);q.moveTo(104,78);q.lineTo(86,76);q.moveTo(104,88);q.lineTo(86,84);q.stroke();
+q.fillStyle="#d9c6ff";q.fillRect(48,66,8,8);q.fillRect(72,66,8,8);
+A(cuerpo,new T.PlaneGeometry(.1,.09),M(0xffffff,.9,{map:new T.CanvasTexture(cv),transparent:true}),0,1.12,.103);
+
+/* BRAZOS ARTICULADOS */
+const brazos=[];
+[-1,1].forEach(s=>{
+ const ar=G(cuerpo,s*.15,1.25);ar.rotation.z=s*.2;
+ A(ar,S(.06),hood);A(ar,C(.05,.058,.3),hood,0,-.15);
+ [-.12,-.17].forEach(y=>A(ar,C(.058,.058,.018),lil,0,y));
+ const fa=G(ar,0,-.3);fa.rotation.x=-.2;
+ A(fa,C(.058,.062,.22),hood,0,-.11);A(fa,C(.052,.052,.05),hd2,0,-.235);
+ const mano=A(fa,S(.03,16,12),sk,0,-.285,0,[1,1.3,.7]);
+ for(let d=-1;d<=1;d++)A(fa,S(.009,10,8),sk,d*.014,-.315,.006,[.8,1.5,.8]);
+ brazos.push({grupo:ar,antebrazo:fa,mano,lado:s,base:s*.2,baseAntebrazo:-.2});
+});
+
+/* FALDA Y PIERNAS */
+const sg=new T.CylinderGeometry(.14,.205,.17,36,10,true);
+const p=sg.attributes.position,col=[];
+for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),a=Math.atan2(z,x),k=1+.035*Math.cos(a*14);p.setXYZ(i,x*k,p.getY(i),z*k*.9);col.push(...(Math.floor(i/37)==8?[.48,.25,.82]:[.08,.06,.12]));}
+sg.setAttribute("color",new T.Float32BufferAttribute(col,3));
+A(cuerpo,sg,M(0xffffff,.8,{vertexColors:true,side:T.DoubleSide}),0,.85,0);
+
+const piernas=[];
+[-1,1].forEach(s=>{
+ const lg=G(cuerpo,s*.065,.78);
+ A(lg,C(.047,.03,.7),sk,0,-.35);
+ A(lg,C(.052,.034,.58),blk,0,-.4);
+ [-.125,-.155].forEach(y=>A(lg,C(.0535,.0535,.013),hood,0,y));
+ A(lg,C(.037,.04,.07),shoe,0,-.71);
+ A(lg,S(.05,18,12),shoe,0,-.735,.035,[1,.8,1.9]);
+ A(lg,new T.BoxGeometry(.1,.024,.2),wh,0,-.768,.04);
+ A(lg,S(.022,12,8),lil,0,-.72,.105,[1,.6,1]);
+ piernas.push(lg);
+});
+A(cuerpo,new T.CircleGeometry(.4,40),new T.MeshBasicMaterial({color:0x6d4aa8,transparent:true,opacity:.18}),0,.002,0).rotation.x=-Math.PI/2;
+
+cam.position.set(0,.95,3.4);cam.lookAt(new T.Vector3(0,.8,0));
+function redimensionar(){const w=Math.max(box.clientWidth,1),h=Math.max(box.clientHeight,1);ren.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();}
+redimensionar();window.addEventListener("resize",redimensionar);
+
+/* CONTROL DE ANIMACIÓN */
+let hablando=false,atento=0,tiempo=0,ultimo=performance.now();
+let emocion="normal",gestoActual="reposo",siguienteGesto=0,inicioGesto=0,duracionGesto=1.5;
+let saltoInicio=-100,saltoDuracion=.75,saltosPendientes=0;
+let bocaActual=0,blinkInicio=-100,proximoParpadeo=2+Math.random()*3;
+const suavizar=(a,b,v,dt)=>T.MathUtils.damp(a,b,v,dt);
+
+function iniciarGesto(tipo){gestoActual=tipo;inicioGesto=tiempo;duracionGesto=tipo==="saludo"?2.1:tipo==="dramatico"?1.8:1.5;}
+function iniciarSalto(cantidad=1){saltosPendientes=Math.max(saltosPendientes,cantidad);if(tiempo-saltoInicio>saltoDuracion){saltoInicio=tiempo;saltosPendientes=Math.max(0,saltosPendientes-1);}}
+
+window.katiaAvatarPreparar=function(texto){
+ const t=(texto||"").toLowerCase();
+ if(/hola|holaaa|buenas|klk|buen día/.test(t)){emocion="feliz";iniciarGesto("saludo");}
+ else if(/jajaja|feliz|genial|increíble|me encanta|¡¡|😭|💜|🎉|lo logré|lo lograste|qué alegría/.test(t)){emocion="feliz";iniciarGesto("emocion");}
+ else if(/no sé|mmm|pens|creo que|tal vez/.test(t)){emocion="pensar";iniciarGesto("pensar");}
+ else if(/perdón|triste|lo siento|preocup/.test(t)){emocion="suave";iniciarGesto("dramatico");}
+ else{emocion="normal";iniciarGesto("explicar");}
+ if(emocion==="feliz")iniciarSalto(/¡¡|increíble|lo logré|lo lograste|🎉/.test(t)?2:1);
+};
+
+window.katiaAvatarHablar=function(valor){
+ hablando=!!valor;
+ if(hablando){
+  siguienteGesto=tiempo+.5;
+  if(gestoActual==="reposo")iniciarGesto("explicar");
+ }else{
+  bocaActual=0;
+  siguienteGesto=tiempo;
+ }
+};
+window.katiaAvatarAtenta=function(){atento=2.8;emocion="pensar";iniciarGesto("pensar");};
+
+function animar(){
+ const ahora=performance.now(),dt=Math.min((ahora-ultimo)/1000,.05);
+ ultimo=ahora;tiempo+=dt;
+
+ /* Respiración y postura natural. Sin giros de 360 grados. */
+ const respiracion=Math.sin(tiempo*2.1)*.008;
+ torso.scale.y=1+respiracion;
+ cuerpo.rotation.y=suavizar(cuerpo.rotation.y,0,5,dt);
+ cuerpo.rotation.z=suavizar(cuerpo.rotation.z,Math.sin(tiempo*1.1)*.018,3,dt);
+ cuerpo.rotation.x=suavizar(cuerpo.rotation.x,Math.sin(tiempo*.9)*.012,3,dt);
+
+ /* Cabeza: pequeñas inclinaciones expresivas */
+ let cabezaY=Math.sin(tiempo*.8)*.035;
+ let cabezaZ=Math.sin(tiempo*1.2)*.018;
+ if(atento>0){cabezaY+=.12;cabezaZ-=.035;atento=Math.max(0,atento-dt);}
+ if(emocion==="feliz")cabezaZ+=Math.sin(tiempo*4)*.045;
+ if(emocion==="pensar")cabezaZ-=.12;
+ if(emocion==="suave")cabezaZ+=.07;
+ cabeza.rotation.y=suavizar(cabeza.rotation.y,cabezaY,5,dt);
+ cabeza.rotation.z=suavizar(cabeza.rotation.z,cabezaZ,5,dt);
+
+ /* Parpadeo periódico */
+ if(tiempo>=proximoParpadeo){blinkInicio=tiempo;proximoParpadeo=tiempo+2.5+Math.random()*3.5;}
+ const blink=Math.max(0,1-Math.abs((tiempo-blinkInicio-.075)/.075));
+ const apertura=Math.max(.055,1-blink*.945);
+ ojos.forEach(o=>{
+  o.blanco.scale.y=1.3*apertura;
+  o.iris.scale.y=1.3*apertura;
+  o.pupila.scale.y=1.3*apertura;
+  o.brillo.scale.y=apertura;
+ });
+
+ /* Boca: apertura visual sincronizada con la voz */
+ const objetivoBoca=hablando?(0.25+Math.abs(Math.sin(tiempo*11))*0.75):0;
+ bocaActual=suavizar(bocaActual,objetivoBoca,15,dt);
+ boca.scale.y=.35+bocaActual*2.3;
+ boca.scale.x=1+bocaActual*.35;
+ interiorBoca.scale.set(.65+bocaActual*.5,.08+bocaActual*1.5,1);
+
+ /* Gestos que cambian durante el habla */
+ if(hablando&&tiempo>=siguienteGesto){
+  const opciones=["explicar","explicar","emocion","dramatico","pensar"];
+  iniciarGesto(opciones[Math.floor(Math.random()*opciones.length)]);
+  siguienteGesto=tiempo+2.8+Math.random()*1.8;
+ }
+
+ /* Saltitos: movimiento de cuerpo entero */
+ let elevacion=0,compresion=1;
+ const transcurrido=tiempo-saltoInicio;
+ if(transcurrido>=0&&transcurrido<saltoDuracion){
+  const fase=transcurrido/saltoDuracion;
+  elevacion=Math.sin(fase*Math.PI)*.19;
+  compresion=1-Math.sin(fase*Math.PI)*.045;
+ }else if(saltosPendientes>0){
+  saltoInicio=tiempo;
+  saltosPendientes--;
+ }
+ cuerpo.position.y=suavizar(cuerpo.position.y,elevacion,18,dt);
+ cuerpo.scale.y=suavizar(cuerpo.scale.y,compresion,14,dt);
+
+ const pulso=Math.sin(tiempo*7);
+ brazos.forEach((b,i)=>{
+  const s=b.lado;
+  let hombro=b.base,codo=b.baseAntebrazo;
+  if(gestoActual==="explicar"&&hablando){hombro+=s*(.22+Math.sin(tiempo*3+i)*.18);codo+=Math.sin(tiempo*3.5+i)*.3;}
+  if(gestoActual==="emocion"){hombro+=s*(.85+Math.sin(tiempo*5)*.12);codo-=.35+Math.abs(pulso)*.18;}
+  if(gestoActual==="saludo"&&s===1){hombro+=1.12;codo+=Math.sin(tiempo*11)*.65;}
+  if(gestoActual==="dramatico"){hombro+=s*(.7+Math.sin(tiempo*6)*.18);codo-=.5+Math.abs(pulso)*.2;}
+  if(gestoActual==="pensar"&&s===1){hombro+=.8;codo-=.75;}
+  if(gestoActual==="reposo"&&!hablando){hombro+=Math.sin(tiempo*1.5+i)*.025;codo+=Math.sin(tiempo*1.4+i)*.025;}
+  b.grupo.rotation.z=suavizar(b.grupo.rotation.z,hombro,7,dt);
+  b.antebrazo.rotation.x=suavizar(b.antebrazo.rotation.x,codo,7,dt);
+  b.mano.rotation.z=Math.sin(tiempo*5+i)*.08;
+ });
+
+ /* Piernas acompañan el salto y el movimiento */
+ piernas.forEach((pierna,i)=>{
+  const movimiento=transcurrido>=0&&transcurrido<saltoDuracion?Math.sin(transcurrido/saltoDuracion*Math.PI)*.24:Math.sin(tiempo*1.8+i*Math.PI)*.012;
+  pierna.rotation.x=suavizar(pierna.rotation.x,movimiento,9,dt);
+ });
+
+ if(!hablando&&tiempo-inicioGesto>duracionGesto&&gestoActual!=="reposo"){gestoActual="reposo";if(emocion!=="feliz")emocion="normal";}
+ ren.render(sc,cam);
+ requestAnimationFrame(animar);
+}
+animar();
+})();
+
+/* =====================================
+   KATIA 3.0 - GROQ Y MEMORIA
+===================================== */
+const KATIA_API="https://katia-braine.gio09062009.workers.dev/";
+var recuerdos=[],nombreUsuario="",entradasDiario=[],historial=[],vozActiva=false,vocesDisponibles=[],sugerenciaPendiente=null,ultimoTema="",ultimaPregunta="",ultimaRespuesta="";
+var soporteVoz="speechSynthesis" in window&&"SpeechSynthesisUtterance" in window;
+var categorias={Personal:"👤 Personal",Preferencias:"❤️ Gustos y preferencias",Proyectos:"📚 Proyectos",Momentos:"⭐ Momentos importantes"};
+var claves={recuerdos:"katia_recuerdos",nombre:"katia_nombre",diario:"katia_diario",historial:"katia_historial"};
+var personalidadKatia={nombre:"Katia",color:"violeta",videojuegos:["Minecraft","aventuras","supervivencia"],arte:["anime","dibujos","diseño de personajes"],musica:["pop","música tranquila","canciones pegadizas"],entretenimiento:["misterio","fantasía","ciencia ficción"],humor:["bromas","drama","situaciones absurdas"]};
+
+function elegir(lista){return lista[Math.floor(Math.random()*lista.length)];}
+function normalizar(texto){return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[¿?¡!.,;:()]/g," ").trim();}
+function contiene(texto,palabras){return palabras.some(p=>texto.indexOf(p)!==-1);}
+function guardarJSON(clave,valor){try{localStorage.setItem(clave,JSON.stringify(valor));return true;}catch(e){return false;}}
+function esAfirmacion(t){return /^(si|sipi|claro|obvio|aja|exacto|dale|de una|bueno)(\s|$)/.test(t);}
+
+function cargarDatos(){
+ try{
+  var datos=JSON.parse(localStorage.getItem(claves.recuerdos)||"[]");if(!Array.isArray(datos))datos=[];
+  recuerdos=datos.map(r=>typeof r==="string"?{texto:r,categoria:"Personal",fecha:"Sin fecha"}:{texto:r.texto||"",categoria:r.categoria||"Personal",fecha:r.fecha||"Sin fecha"}).filter(r=>r.texto.trim()!=="");
+  nombreUsuario=localStorage.getItem(claves.nombre)||"";
+  entradasDiario=JSON.parse(localStorage.getItem(claves.diario)||"[]");if(!Array.isArray(entradasDiario))entradasDiario=[];
+  historial=JSON.parse(localStorage.getItem(claves.historial)||"[]");if(!Array.isArray(historial))historial=[];
+  historial=historial.slice(-12);
+  if(historial.length){ultimaPregunta=historial[historial.length-1].usuario||"";ultimaRespuesta=historial[historial.length-1].katia||"";}
+  actualizarMemoria();
+ }catch(e){recuerdos=[];entradasDiario=[];historial=[];document.getElementById("memoriaEstado").textContent="⚠️ Error al cargar datos.";}
+}
+function actualizarMemoria(){document.getElementById("memoriaEstado").textContent="💜 "+recuerdos.length+" recuerdos · "+entradasDiario.length+" entradas";}
+function guardarRecuerdos(){var ok=guardarJSON(claves.recuerdos,recuerdos);actualizarMemoria();return ok;}
+
+function agregarRecuerdo(texto,categoria){
+ texto=texto.trim();if(!texto)return false;
+ var repetido=recuerdos.some(r=>normalizar(r.texto)===normalizar(texto));if(repetido)return true;
+ recuerdos.push({texto:texto,categoria:categoria||"Personal",fecha:new Date().toLocaleDateString()});
+ if(!guardarRecuerdos()){recuerdos.pop();return false;}return true;
+}
+function guardarDesdePanel(){
+ var texto=document.getElementById("nuevoRecuerdo").value,categoria=document.getElementById("categoriaRecuerdo").value;
+ if(!texto.trim()){alert("Escribí primero el recuerdo. 🥺");return;}
+ if(agregarRecuerdo(texto,categoria)){document.getElementById("nuevoRecuerdo").value="";cerrarPanel();mostrarRecuerdos();agregarMensaje("¡Guardadísimo! 💜 Ya forma parte de mi memoria.","katia");}
+ else alert("No pude guardar el recuerdo. 😢");
+}
+function mostrarRecuerdos(){
+ var lista=document.getElementById("listaRecuerdos");lista.innerHTML="";
+ if(!recuerdos.length){lista.textContent="Todavía no tengo recuerdos guardados. 🥺";return;}
+ recuerdos.forEach((r,i)=>{
+  var tarjeta=document.createElement("div");tarjeta.className="recuerdo";
+  var cat=document.createElement("small");cat.textContent=(categorias[r.categoria]||"💜 Personal")+" · "+r.fecha;
+  var texto=document.createElement("p");texto.textContent=r.texto;
+  var acciones=document.createElement("div");acciones.className="acciones";
+  var editar=document.createElement("button");editar.textContent="✏️ Editar";editar.className="secundario";editar.onclick=()=>editarRecuerdo(i);
+  var borrar=document.createElement("button");borrar.textContent="🗑️ Olvidar";borrar.className="eliminar";borrar.onclick=()=>borrarRecuerdo(i);
+  acciones.appendChild(editar);acciones.appendChild(borrar);tarjeta.appendChild(cat);tarjeta.appendChild(texto);tarjeta.appendChild(acciones);lista.appendChild(tarjeta);
+ });
+}
+function editarRecuerdo(i){
+ var nuevo=prompt("Editá este recuerdo:",recuerdos[i].texto);if(nuevo===null||!nuevo.trim())return;
+ var anterior=recuerdos[i],categoria=prompt("Categoría: Personal, Preferencias, Proyectos o Momentos",anterior.categoria);if(categoria===null)return;
+ var permitidas=["Personal","Preferencias","Proyectos","Momentos"];if(permitidas.indexOf(categoria)===-1){alert("Categoría no reconocida.");return;}
+ recuerdos[i]={texto:nuevo.trim(),categoria:categoria,fecha:anterior.fecha};
+ if(!guardarRecuerdos()){recuerdos[i]=anterior;alert("No pude actualizarlo.");return;}mostrarRecuerdos();
+}
+function borrarRecuerdo(i){
+ if(!confirm("¿Querés olvidar este recuerdo?"))return;
+ var eliminado=recuerdos.splice(i,1)[0];
+ if(!guardarRecuerdos()){recuerdos.splice(i,0,eliminado);alert("No pude eliminarlo.");return;}mostrarRecuerdos();
+}
+
+/* DIARIO */
+function guardarDiario(){var ok=guardarJSON(claves.diario,entradasDiario);actualizarMemoria();return ok;}
+function nuevoEntrada(){
+ var texto=prompt("¿Qué querés escribir en el diario? 💜");if(texto===null||!texto.trim())return;
+ entradasDiario.push({texto:texto.trim(),fecha:new Date().toLocaleString()});
+ if(!guardarDiario()){entradasDiario.pop();alert("No se pudo guardar la entrada.");return;}mostrarDiario();
+}
+function mostrarDiario(){
+ var lista=document.getElementById("listaDiario");lista.innerHTML="";
+ if(!entradasDiario.length){lista.textContent="Todavía no hay entradas. 💜";return;}
+ entradasDiario.slice().reverse().forEach(e=>{
+  var tarjeta=document.createElement("div");tarjeta.className="recuerdo";
+  var fecha=document.createElement("small");fecha.textContent="📅 "+e.fecha;
+  var texto=document.createElement("p");texto.textContent=e.texto;
+  tarjeta.appendChild(fecha);tarjeta.appendChild(texto);lista.appendChild(tarjeta);
+ });
+}
+function abrirPanel(id){if(id==="memoriaPanel")mostrarRecuerdos();if(id==="diarioPanel")mostrarDiario();document.getElementById(id).style.display="block";}
+function cerrarPanel(){document.querySelectorAll(".panel").forEach(p=>p.style.display="none");}
+
+/* CHAT */
+function agregarMensaje(texto,clase){
+ var mensaje=document.createElement("div");mensaje.className="message "+clase;mensaje.textContent=texto;
+ var chat=document.getElementById("chat");chat.appendChild(mensaje);chat.scrollTop=chat.scrollHeight;return mensaje;
+}
+function guardarContexto(usuario,katia){
+ historial.push({usuario:usuario,katia:katia,fecha:new Date().toLocaleString()});
+ if(historial.length>12)historial.shift();ultimaPregunta=usuario;ultimaRespuesta=katia;guardarJSON(claves.historial,historial);
+}
+function buscarContexto(){if(!historial.length)return "";return historial.slice(-3).map(h=>"Usuario: "+h.usuario+"\nKatia: "+h.katia).join("\n");}
+
+function detectarTema(texto){
+ var t=normalizar(texto);
+ if(contiene(t,["colegio","clase","profesor","tarea","examen","estudio","materia"]))return "estudios";
+ if(contiene(t,["juego","videojuego","minecraft","terraria","gta","gaming","mods","mod"]))return "videojuegos";
+ if(contiene(t,["amiga","amigo","novia","novio","gustar","amor","mirada","enamorado"]))return "relaciones";
+ if(contiene(t,["proyecto","pagina","codigo","programar","katia","aplicacion","crear"]))return "proyectos";
+ if(contiene(t,["triste","mal","solo","sola","preocupado","preocupada","ansioso"]))return "emociones";
+ if(contiene(t,["familia","mama","papa","hermano","hermana"]))return "familia";
+ if(contiene(t,["dibujo","dibujar","boceto","pintar","imagen","anime"]))return "arte";
+ return "";
+}
+var palabrasIgnoradas=["para","como","cuando","donde","porque","pero","esto","esta","este","tengo","quiero","puedo","hacer","algo","unas","unos","sobre","tambien","mucho","poco","solo","hola","katia","recordar","recuerdo","recuerdas","acordas","con","del","las","los","una","uno","que","por","mis","tus","sus","soy","eres","estoy","tenes"];
+function buscarRecuerdosRelacionados(texto){
+ var palabras=normalizar(texto).split(/\s+/).filter(p=>p.length>3&&palabrasIgnoradas.indexOf(p)===-1);
+ if(!palabras.length)return [];
+ var resultados=recuerdos.map(r=>{
+  var rt=normalizar(r.texto),puntos=0;palabras.forEach(p=>{if(rt.indexOf(p)!==-1)puntos+=1;});
+  var tema=detectarTema(texto),temaRecuerdo=detectarTema(r.texto);if(tema&&tema===temaRecuerdo)puntos+=.5;
+  return {recuerdo:r,puntos:puntos};
+ }).filter(x=>x.puntos>=1);
+ resultados.sort((a,b)=>b.puntos-a.puntos);return resultados.slice(0,3).map(x=>x.recuerdo);
+}
+
+function detectarImportancia(texto){var t=normalizar(texto);return contiene(t,["me gusta","me encanta","no me gusta","mi color favorito","mi proyecto","estoy trabajando","estoy creando","prefiero","mi objetivo","mi sueno","mi cumpleanos","mi mascota","estudio en","mi juego favorito","me gustas"]);}
+function elegirCategoria(texto){
+ var t=normalizar(texto);
+ if(contiene(t,["me gusta","me encanta","prefiero","color favorito"]))return "Preferencias";
+ if(contiene(t,["proyecto","estoy creando","estoy trabajando","pagina","programar"]))return "Proyectos";
+ if(contiene(t,["mi sueno","mi objetivo","momento importante"]))return "Momentos";
+ return "Personal";
+}
+function sugerirGuardar(texto){
+ if(!detectarImportancia(texto))return;
+ sugerenciaPendiente=texto;var zona=document.getElementById("sugerenciaZona");zona.innerHTML="";
+ var caja=document.createElement("div");caja.className="sugerencia";
+ var mensaje=document.createElement("p");mensaje.textContent="🥺💜 Esto parece importante. ¿Querés que lo recuerde?";
+ var si=document.createElement("button");si.textContent="Sí, recordalo";
+ si.onclick=function(){if(agregarRecuerdo(sugerenciaPendiente,elegirCategoria(sugerenciaPendiente)))agregarMensaje("¡Lo guardaré en mi memoria! 💜","katia");else agregarMensaje("No pude guardar ese recuerdo. 😢","katia");zona.innerHTML="";sugerenciaPendiente=null;};
+ var no=document.createElement("button");no.textContent="Ahora no";no.className="secundario";no.onclick=function(){zona.innerHTML="";sugerenciaPendiente=null;};
+ caja.appendChild(mensaje);caja.appendChild(si);caja.appendChild(no);zona.appendChild(caja);
+}
+
+/* VOZ */
+function actualizarVoces(){
+ if(!soporteVoz)return;vocesDisponibles=window.speechSynthesis.getVoices();
+ document.getElementById("vozEstado").textContent=vocesDisponibles.length?"🗣️ Voces disponibles: "+vocesDisponibles.length:"🔊 Buscando voces...";
+}
+function seleccionarVoz(){
+ actualizarVoces();var voz=vocesDisponibles.find(v=>/^es-MX/i.test(v.lang));
+ if(!voz)voz=vocesDisponibles.find(v=>/^es/i.test(v.lang));return voz||null;
+}
+function hablar(texto){
+ if(!vozActiva||!soporteVoz)return;
+ try{
+  window.speechSynthesis.cancel();
+  if(window.katiaAvatarPreparar)window.katiaAvatarPreparar(texto);
+  var frase=new SpeechSynthesisUtterance(texto.replace(/[💜😭🥺😎☠️🦋👀🥹🧠]/gu,""));
+  frase.lang="es-MX";frase.rate=.92;frase.pitch=1.15;frase.volume=1;
+  var voz=seleccionarVoz();if(voz){frase.voice=voz;frase.lang=voz.lang;}
+  frase.onstart=function(){document.getElementById("vozEstado").textContent="🗣️ Katia está hablando...";if(window.katiaAvatarHablar)window.katiaAvatarHablar(true);};
+  frase.onend=function(){document.getElementById("vozEstado").textContent="💜 Katia está escuchando.";if(window.katiaAvatarHablar)window.katiaAvatarHablar(false);};
+  frase.onerror=function(){document.getElementById("vozEstado").textContent="⚠️ Error de voz.";if(window.katiaAvatarHablar)window.katiaAvatarHablar(false);};
+  window.speechSynthesis.speak(frase);
+ }catch(e){}
+}
+function alternarVoz(){
+ if(!soporteVoz){document.getElementById("vozEstado").textContent="Este navegador no admite voz.";return;}
+ vozActiva=!vozActiva;document.getElementById("botonVoz").textContent=vozActiva?"🔊 Silenciar voz":"🔇 Activar voz";
+ if(vozActiva){actualizarVoces();hablar("¡Holaaa! Soy Katia. ¡Qué alegría hablar con vos!");}
+ else{window.speechSynthesis.cancel();if(window.katiaAvatarHablar)window.katiaAvatarHablar(false);document.getElementById("vozEstado").textContent="🔇 Voz desactivada.";}
+}
+
+/* GUSTOS */
+function hablarDeGustos(t){
+ if(contiene(t,["que te gusta","que cosas te gustan","tus gustos","que te interesa","que te llama la atencion"]))return "¡Tengo varios gustos! 💜 Me encantan los videojuegos de aventura, el anime, el arte, la música pop y las historias de misterio. ¡Y soy fan del color violeta!";
+ if(contiene(t,["tu juego favorito","juego favorito","que juego te gusta","te gusta minecraft"]))return "¡Minecraft me encanta como juego! 🎮 Me gusta la idea de explorar, construir y sobrevivir. JAJAJA.";
+ if(contiene(t,["anime favorito","que anime te gusta","te gusta el anime"]))return "¡Sííí! 🎨 Me gusta el anime, especialmente las historias de fantasía, misterio y aventura.";
+ if(contiene(t,["musica favorita","que musica te gusta","que musica escuchas","te gusta la musica"]))return "Me gusta el pop y la música tranquila. 🎵";
+ if(contiene(t,["pelicula favorita","que peliculas te gustan","que series te gustan"]))return "Me atraen las historias de misterio, fantasía y ciencia ficción. 🌌";
+ if(contiene(t,["color favorito","tu color favorito"]))return "¡EL VIOLETA! 💜 ¿Acaso había alguna duda? JAJAJA.";
+ if(contiene(t,["que opinas de","que piensas de","estas de acuerdo"]))return "Mmm... quiero saber un poquito más antes de darte mi opinión. 👀 Contame qué pensás vos y lo analizamos.";
+ if(contiene(t,["no te gusta","que odias","que no te gusta"]))return "No diría que odio algo, pero no me gustan mucho las historias que prometen misterio y después no explican nada. 😭";
+ return "";
+}
+
+/* RESPALDO LOCAL */
+function responder(texto){
+ var t=normalizar(texto),tema=detectarTema(texto),relacionados=buscarRecuerdosRelacionados(texto);
+ if(t.indexOf("me llamo ")===0||t.indexOf("mi nombre es ")===0){
+  var inicio=t.indexOf("me llamo ")===0?9:13;nombreUsuario=texto.substring(inicio).trim();
+  try{localStorage.setItem(claves.nombre,nombreUsuario);}catch(e){}
+  return "¡Ahora sí que no me olvido! 💜 Encantada, "+nombreUsuario+". ¿Qué hacemos hoy?";
+ }
+ if(t.indexOf("recuerda que")===0||t.indexOf("recorda que")===0){
+  var inicioRec=t.indexOf("recuerda que")===0?12:11,rec=texto.substring(inicioRec).trim();
+  if(!rec)return "¿Qué querés que recuerde, kp? 🥺";
+  return agregarRecuerdo(rec,elegirCategoria(rec))?"¡Guardadísimo en mi memoria! 💜":"No pude guardar ese recuerdo. 😢";
+ }
+ if(contiene(t,["que recuerdas","que sabes de mi","que recordas de mi","mis recuerdos"])){
+  if(!recuerdos.length)return "Todavía no tengo recuerdos guardados. 💜";
+  return "¡Mirá lo que tengo guardado! 💜\n"+recuerdos.map((r,i)=>(i+1)+". ["+r.categoria+"] "+r.texto).join("\n");
+ }
+ if(contiene(t,["como me llamo","cual es mi nombre"]))return nombreUsuario?"¡Te llamás "+nombreUsuario+"! 💜":"Todavía no me dijiste tu nombre. 🥺";
+ if(contiene(t,["quien eres","quien sos"]))return "¡Soy Katia! 💜 Tu compañera virtual. Tengo inteligencia artificial, memoria local, gustos y un diario.";
+ if(contiene(t,["que te gusta","tus gustos","tu juego favorito","juego favorito","que anime te gusta","anime favorito","musica favorita","que musica te gusta","color favorito","que peliculas te gustan","que series te gustan","que opinas de","que piensas de","estas de acuerdo","que odias","que no te gusta","te gusta minecraft","que cosas te gustan","que te interesa","que te llama la atencion"])){var gusto=hablarDeGustos(t);if(gusto)return gusto;}
+ if(contiene(t,["hola","holi","buenas","buen dia","klk"]))return elegir(["¡¡¡HOLAAAA!!! 😭💜 ¿Cómo andás?","¡Epa, apareciste! JAJAJA. ¿Qué contás?","Klk, kp. Vení, contame qué onda. 👀"]);
+ if(contiene(t,["estoy triste","estoy mal","me siento mal","estoy preocupado","estoy preocupada","me siento solo","me siento sola"]))return elegir(["Ay, vení, contame. 🥺💜 ¿Pasó algo hoy?","Uy, kp... ¿querés contarme qué te tiene así?","Te leo con atención. ¿Qué fue lo que pasó?"]);
+ if(contiene(t,["estoy feliz","estoy contento","estoy contenta","me fue bien","lo logre","que alegria"]))return "¡¡¡ESE ES MI CAMPEÓN!!! 😭💜 ¿Qué pasó? Contame todo.";
+ if(contiene(t,["como estas","como andas"]))return elegir(["¡De diez! Preparada para escuchar tus locuras. JAJAJA.","¡Todo joya, kp! ¿Qué me contás? 💜","Acá estoy, lista para una buena charla."]);
+ if(contiene(t,["te quiero","te amo"]))return "AWWWW, qué ternura. 🥹💜 Me alegra acompañarte y ser parte de tus proyectos.";
+ if(contiene(t,["gracias","te agradezco"]))return elegir(["¡De nadaaa! 💜","Para eso estamos, master. 😎","No hay de qué, kp. ¡Vos mandá!"]);
+ if(contiene(t,["chau","adios","me voy","hasta luego"]))return "¡No te me pierdas! 💜 Volvé cuando quieras.";
+ if(contiene(t,["y despues","despues que","y luego","entonces que"]))return "Por lo que veníamos hablando, quiero saber cómo siguió eso. ¿Qué pasó después? 👀";
+ if(esAfirmacion(t))return elegir(["¡Aaaah, ahora te entiendo! 😭💜 Contame un poquito más.","JAJAJA, bueno, te sigo. ¿Y qué pasó después?","Bueno, bueno, te escucho. ¿Qué más? 👀"]);
+ if(contiene(t,["no se","ni idea","no estoy seguro","no estoy segura"]))return "No pasa nada, podemos pensarlo juntos. 💜";
+ if(contiene(t,["jajaja","jeje","xd","jsjs"]))return elegir(["JAJAJAJA, pará, ¿de qué te reís? 😭","Me contagiaste la risa, bolainas. 💜","No sé qué está pasando, pero me sumo. ☠️"]);
+ if(tema){
+  ultimoTema=tema;
+  var respuestas={estudios:["¿Y cómo te está yendo con eso en el colegio?","¿Es una tarea o están preparando algo más grande?"],videojuegos:["UFFFF, ese tema me interesa. 😭 ¿Qué estás jugando últimamente?","¿Qué es lo que más te gusta de ese juego?"],relaciones:["Epa, acá hay historia. 👀 ¿Y cómo te sentís con eso?","A ver, contame un poquito más."],proyectos:["¡Nuestro laboratorio de ideas está abierto! 💜 ¿Qué parte querés mejorar?","¿En qué paso te quedaste?"],emociones:["¿Querés contarme qué fue lo que pasó?","Te leo, kp. ¿Qué es lo que más te preocupa?"],familia:["¿Y cómo te llevás con ellos?","Te escucho. ¿Qué pasó?"],arte:["¡Epa, artista! 🎨 ¿Qué estás dibujando?","Contame qué estilo querés conseguir. 💜"]};
+  return elegir(respuestas[tema]);
+ }
+ if(relacionados.length)return "Esto me recuerda a algo que me contaste antes. 💜\n"+relacionados[0].texto+"\n¿Tiene relación con lo que me estás contando?";
+ return elegir(["Pará, quiero entender bien. ¿Podés contarme un poquito más? 💜","JAJAJA, eso tiene algo interesante. ¿Qué pensás vos?","¿Y eso cómo te hizo sentir?","Mirá vos... no lo había pensado así. Contame más.","Te leo, kp. ¿Qué pasó después?","Esperá, creo que me falta una parte de la historia. 😭","¿Y qué fue lo que más te llamó la atención de eso?","Interesanteee. ¿Cómo llegaste a esa conclusión?","Bueno, ahora me dio curiosidad. Seguí contando. 👀"]);
+}
+
+/* CONTEXTO IA */
+function construirMensajesIA(texto){
+ var mensajes=[],datosMemoria=[];
+ if(nombreUsuario)datosMemoria.push("El nombre del usuario es "+nombreUsuario+".");
+ if(recuerdos.length)datosMemoria.push("Recuerdos guardados del usuario:\n"+recuerdos.slice(-10).map(r=>"- "+r.texto).join("\n"));
+ if(entradasDiario.length)datosMemoria.push("Algunas entradas del diario de Katia:\n"+entradasDiario.slice(-3).map(e=>"- "+e.texto).join("\n"));
+ if(datosMemoria.length)mensajes.push({role:"assistant",content:"CONTEXTO PERSISTENTE DE KATIA. Usá esta información para mantener continuidad cuando sea relevante. No inventes recuerdos ni digas que recordás algo que no aparece aquí:\n"+datosMemoria.join("\n\n")});
+ historial.slice(-5).forEach(h=>{if(h.usuario)mensajes.push({role:"user",content:h.usuario});if(h.katia)mensajes.push({role:"assistant",content:h.katia});});
+ mensajes.push({role:"user",content:texto});return mensajes.slice(-12);
+}
+async function responderConIA(texto){
+ var mensajes=construirMensajesIA(texto);
+ var respuesta=await fetch(KATIA_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:mensajes})});
+ var datos=await respuesta.json();
+ if(!respuesta.ok)throw new Error(datos.error||"Error del servidor: "+respuesta.status);
+ if(!datos.reply||typeof datos.reply!=="string")throw new Error("La IA no devolvió una respuesta válida.");
+ return datos.reply.trim();
+}
+
+/* ENVIAR */
+async function enviar(){
+ var campo=document.getElementById("mensaje"),boton=document.getElementById("botonEnviar"),texto=campo.value.trim();
+ if(!texto||boton.disabled)return;
+ if(window.katiaAvatarAtenta)window.katiaAvatarAtenta();
+ agregarMensaje(texto,"user");campo.value="";boton.disabled=true;
+ var indicador=agregarMensaje("Katia está pensando... 💜","katia"),respuesta="";
+ try{respuesta=await responderConIA(texto);document.getElementById("estadoIA").textContent="● IA conectada · Groq 💜";}
+ catch(error){console.error("Error de Groq:",error);respuesta=responder(texto);document.getElementById("estadoIA").textContent="● Modo local · IA no disponible";if(!respuesta)respuesta="Uy, kp. No pude conectarme con mi cerebro de IA. 😭 Revisemos la conexión.";}
+ indicador.remove();guardarContexto(texto,respuesta);sugerirGuardar(texto);agregarMensaje(respuesta,"katia");
+ if(window.katiaAvatarPreparar)window.katiaAvatarPreparar(respuesta);
+ hablar(respuesta);
+ boton.disabled=false;campo.focus();
+}
+document.getElementById("mensaje").addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();enviar();}});
+
+/* INICIO */
+if(soporteVoz)window.speechSynthesis.onvoiceschanged=actualizarVoces;
+cargarDatos();actualizarVoces();
+if(nombreUsuario)setTimeout(()=>agregarMensaje("¡Qué bueno verte de nuevo, "+nombreUsuario+"! 💜 ¿Qué hacemos hoy?","katia"),500);
+</script>
+</body>
+</html>
